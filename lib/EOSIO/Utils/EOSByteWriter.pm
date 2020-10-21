@@ -47,6 +47,7 @@ sub put_bytes($self, $val) {
 
 sub put_variable_uint($self, $val) {
     $val = Math::BigInt->new($val) unless ref $val;
+    return $self->put_char(0) if $val->is_zero;
 
     while(not $val->is_zero) {
         $b = $val->copy()->band(0x7f);
