@@ -7,6 +7,9 @@ use DateTime::Format::DateParse;
 
 use EOSIO::Utils::EOSByteWriter;
 
+use base 'Exporter';
+our @EXPORT = qw(pack);
+
 sub pack($tx) {
     my $dt = DateTime::Format::DateParse->parse_datetime($tx->{expiration}, 'UTC');
     my $w = EOSIO::Utils::EOSByteWriter->new;
