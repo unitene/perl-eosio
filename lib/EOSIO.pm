@@ -7,8 +7,8 @@ use Try::Tiny;
 use EOSIO::Chain;
 use EOSIO::Wallet;
 
-use EOSIO::Providers::Sock;
 use EOSIO::Providers::HTTP;
+use EOSIO::Providers::Utils 'cb';
 
 use Moo;
 
@@ -78,7 +78,7 @@ sub push_actions {
         };
         return $cb->(undef, $error_msg) unless $result;
 
-        $self->wallet->unlock($wallet->{name}, $wallet->{password}, sub {
+        $self->wallet->unlock($wallet->{name}, $wallet->{password}, cb $cb, sub {
             my $exp_time = DateTime->now()->add({ minutes => 30 })->strftime("%FT%T.000");
             my $tx = {
                 ref_block_num          => $last_block,
@@ -89,13 +89,9 @@ sub push_actions {
                 context_free_actions   => [],
                 transaction_extensions => [],
             };
-            $self->chain->get_required_keys($keys, $tx, sub {
-                my ($result, $error_msg) = @_;
-                die $error_msg unless $result;
-
-                $self->wallet->sign_transaction($tx, $result->{required_keys}, $chain_id, sub {
-                    my ($result, $error_msg) = @_;
-                    die $error_msg unless $result;
+            $self->chain->get_required_keys($keys, $tx, cb $cb, sub {
+                $self->wallet->sign_transaction($tx, shift->{required_keys}, $chain_id, cb $cb, sub {
+                    my $result = shift;
                     my $push = {
                         compression              => 'none',
                         signatures               => $result->{signatures},
@@ -103,11 +99,7 @@ sub push_actions {
                         packed_trx               => EOSIO::Utils::Transaction::pack($result),
                     };
 
-                    $self->chain->push_transaction($push, sub {
-                        my ($result, $error_msg) = @_;
-                        return $cb->(undef, "push_transaction: $error_msg") unless $result;
-                        $cb->($result, 'OK');
-                    });
+                    $self->chain->push_transaction($push, $cb);
                 });
             });
         });

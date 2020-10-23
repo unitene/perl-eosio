@@ -27,7 +27,6 @@ sub make_request {
     $params //= {};
     $self->_request($path, $params, sub {
         my (undef, $tx) = @_;
-        my $result = decode_json($tx->result->body);
         if (my $error = $tx->error) {
             unless ($error->{code}) {
                 if ($self->_error_handler($tx, ++$try_cnt, $cb)) {
@@ -39,12 +38,14 @@ sub make_request {
                 }
             }
             else {
+                my $result = decode_json($tx->result->body);
                 $result->{error}->{details}->[0]->{message} ?
                     $cb->(undef, $result->{error}->{details}->[0]->{message})
                     : $cb->(undef, "Error: $error->{message}, code - " . $error->{code}, $error->{message});
             }
         }
         else {
+            my $result = decode_json($tx->result->body);
             if ($result->{error}) {
                 $cb->(undef, $result->{error}->{code} . ': ' . $result->{error}->{message});
             }
@@ -68,7 +69,7 @@ sub _error_handler {
     }
     else {
         my $err = $tx->error;
-        my $error_msg = "$err->{message}: " . $tx->res->body;
+        my $error_msg = "$err->{message}";
         $cb->(undef, $error_msg);
         return undef;
     }
