@@ -38,6 +38,14 @@ sub decode_json {
     Mojo::JSON::decode_json(@_);
 }
 
+sub json_true {
+    Mojo::JSON::true;
+}
+
+sub json_false {
+    Mojo::JSON::false;
+}
+
 sub name_to_long {
     my $name_str = shift;
 

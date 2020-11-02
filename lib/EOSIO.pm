@@ -3,12 +3,15 @@ use uni::perl;
 use Data::Dumper;
 use AnyEvent;
 use Try::Tiny;
+use DateTime;
+use EOSIO::Utils;
 
 use EOSIO::Chain;
 use EOSIO::Wallet;
 
 use EOSIO::Providers::HTTP;
 use EOSIO::Providers::Utils 'cb';
+use EOSIO::Utils::Transaction;
 
 use Moo;
 
@@ -93,6 +96,67 @@ sub push_actions {
         });
     })
 }
+
+sub get_buy_ram_bytes_action {
+    my ($payer, $receiver, $bytes, $authorization) = @_;
+
+    return {
+        account       => 'eosio',
+        name          => 'buyrambytes',
+        data          => {
+            payer    => $payer,
+            receiver => $receiver,
+            bytes    => $bytes,
+        },
+        authorization => $authorization,
+    }
+}
+
+sub get_delegate_bw_action {
+    my ($from, $receiver, $cpu_q, $net_q, $authorization, $is_transfer) = (shift, shift, shift, shift, pop, shift);
+    $is_transfer //= 1;
+    return {
+        account       => 'eosio',
+        name          => 'delegatebw',
+        authorization => $authorization,
+        data          => {
+            from               => $from,
+            receiver           => $receiver,
+            stake_cpu_quantity => $cpu_q,
+            stake_net_quantity => $net_q,
+            transfer           => $is_transfer ? EOSIO::Utils::json_true : EOSIO::Utils::json_false,
+        }
+    };
+}
+
+sub get_new_account_action {
+    my ($creator, $name, $owner_key, $authorization, $active_key) = (shift, shift, shift, pop, shift);
+    $active_key //= $owner_key;
+
+    return {
+        account       => 'eosio',
+        name          => 'newaccount',
+        authorization => $authorization,
+        data          => {
+            creator => $creator,
+            name    => $name,
+            owner   => {
+                threshold => 1,
+                keys      => [ { key => $owner_key, weight => 1 } ],
+                accounts  => [],
+                waits     => [],
+            },
+            active  => {
+                threshold => 1,
+                keys      => [ { key => $active_key, weight => 1 } ],
+                accounts  => [],
+                waits     => [],
+            },
+        }
+
+    }
+}
+
 
 sub _get_block_info {
     my ($self, $cb) = @_;

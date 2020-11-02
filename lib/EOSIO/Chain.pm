@@ -37,4 +37,9 @@ sub push_transaction {
     $self->provider->post_request('/v1/chain/push_transaction', $tx, add_msg_cb 'push_transaction' => $cb);
 }
 
+sub get_account {
+    my ($self, $account_name, $cb) = @_;
+    $self->provider->post_request('/v1/chain/get_account', { account_name => $account_name }, add_msg_cb 'get_account' => $cb);
+}
+
 1;
