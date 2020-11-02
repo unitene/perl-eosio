@@ -3,6 +3,7 @@ use uni::perl;
 use Data::Dumper;
 use Encode;
 use Mojo::JSON;
+use Math::BigInt;
 
 use base 'Exporter';
 our @EXPORT = qw(cb utf8ToHex decode_json encode_json);
@@ -66,12 +67,44 @@ sub name_to_long {
     for (my $i = 0; $i <= MAX_NAME_IDX; $i++) {
         my $c = Math::BigInt->new($char_to_symbol->(shift @a));
         $i < MAX_NAME_IDX ?
-            $c->band(0x1f)->blsft(64 - 5 * ($i +1))
+            $c->band(0x1f)->blsft(64 - 5 * ($i + 1))
             : $c->band(0x0f);
         $v->bior($c);
     }
     return $v;
 }
 
+sub long_to_name {
+    my $val = shift;
+    $val = Math::BigInt->new($val) unless ref $val;
+
+    my $symbol_to_char = sub {
+        return '' unless $_[0];
+        my $c = shift;
+        if ($c >= 1 && $c <= 5) {
+            return chr(ord('1') + $c - 1);
+        }
+        elsif ($c >= 6 && $c <= 31) {
+            return chr(ord('a') + $c - 6);
+        }
+        return '';
+    };
+
+    my @out;
+    for (my $i = 0; $i <= MAX_NAME_IDX; $i++) {
+        my $tmp = $val->copy;
+        if ($i == 0) {
+            $tmp->band(0x0f);
+            $val->brsft(4);
+        }
+        else {
+            $tmp->band(0x1f);
+            $val->brsft(5);
+        }
+        push @out => $symbol_to_char->($tmp->numify());
+    }
+
+    return join "" => reverse @out;
+}
 
 1;
