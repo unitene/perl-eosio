@@ -6,7 +6,7 @@ use Mojo::JSON;
 use Math::BigInt;
 
 use base 'Exporter';
-our @EXPORT = qw(cb utf8ToHex decode_json encode_json);
+our @EXPORT = qw(cb utf8ToHex decode_json encode_json name_to_long long_to_name gen_name);
 
 use constant {
     MAX_NAME_IDX => 12,
@@ -105,6 +105,27 @@ sub long_to_name {
     }
 
     return join "" => reverse @out;
+}
+
+sub gen_name {
+    my @Alpha = (
+        [ 'a' .. 'z' ],
+        [ 'a' .. 'z', '1' .. '5' ],
+        [ 'a' .. 'z', '1' .. '5', '.' ],
+    );
+
+    join '' => map {
+        my @c_alpha;
+        if ($_ == 1) {
+            $Alpha[0]->[rand scalar(@{$Alpha[0]})]
+        }
+        elsif ($_ == 12) {
+            $Alpha[1]->[rand scalar(@{$Alpha[1]})]
+        }
+        else {
+            $Alpha[2]->[rand scalar(@{$Alpha[2]})]
+        }
+    } (1 .. 12);
 }
 
 1;

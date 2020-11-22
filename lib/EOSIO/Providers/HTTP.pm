@@ -46,7 +46,7 @@ sub make_request {
         }
         else {
             my $result = decode_json($tx->result->body);
-            if (ref $result and $result->{error}) {
+            if (ref $result eq 'HASH' and $result->{error}) {
                 $cb->(undef, $result->{error}->{code} . ': ' . $result->{error}->{message});
             }
             else {

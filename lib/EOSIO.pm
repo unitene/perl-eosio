@@ -41,9 +41,9 @@ sub push_actions {
     return $cb->([], 'OK') unless @$actions;
 
     my $cv = AnyEvent->condvar;
-    $cv->begin;
     foreach my $action (@$actions) {
         my $data = delete $action->{data};
+        $cv->begin;
         $self->chain->abi_to_json($action->{account}, $action->{name}, $data, sub {
             my $result = shift;
             return $cv->croak($_[0]) unless $result;
@@ -94,7 +94,7 @@ sub push_actions {
                 });
             });
         });
-    })
+    });
 }
 
 sub get_buy_ram_bytes_action {
@@ -153,10 +153,8 @@ sub get_new_account_action {
                 waits     => [],
             },
         }
-
     }
 }
-
 
 sub _get_block_info {
     my ($self, $cb) = @_;

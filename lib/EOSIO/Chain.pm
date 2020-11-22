@@ -2,7 +2,7 @@ package EOSIO::Chain;
 use uni::perl;
 use Data::Dumper;
 use EOSIO::Utils qw/cb utf8ToHex encode_json/;
-use EOSIO::Providers::Utils qw/add_msg_cb/ ;
+use EOSIO::Providers::Utils qw/add_msg_cb/;
 
 use Moo;
 
@@ -29,7 +29,7 @@ sub get_block {
 
 sub get_required_keys {
     my ($self, $key_list, $tx, $cb) = @_;
-    $self->provider->post_request('/v1/chain/get_required_keys', {transaction => $tx, available_keys => $key_list}, add_msg_cb 'get_required_keys' => $cb);
+    $self->provider->post_request('/v1/chain/get_required_keys', { transaction => $tx, available_keys => $key_list }, add_msg_cb 'get_required_keys' => $cb);
 }
 
 sub push_transaction {
@@ -40,6 +40,16 @@ sub push_transaction {
 sub get_account {
     my ($self, $account_name, $cb) = @_;
     $self->provider->post_request('/v1/chain/get_account', { account_name => $account_name }, add_msg_cb 'get_account' => $cb);
+}
+
+sub get_currency_balance {
+    my ($self, $account, $c_name, $sym, $cb) = @_;
+    my $data = {
+        "account" => $account,
+        "code"    => $c_name,
+        "symbol"  => $sym,
+    };
+    $self->provider->post_request('/v1/chain/get_currency_balance', $data, add_msg_cb 'get_currency_balance' => $cb);
 }
 
 1;
