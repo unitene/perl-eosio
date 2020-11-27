@@ -42,6 +42,23 @@ sub get_account {
     $self->provider->post_request('/v1/chain/get_account', { account_name => $account_name }, add_msg_cb 'get_account' => $cb);
 }
 
+sub get_table_rows {
+    my ($self, $code, $table, $scope, $filter, $cb) = @_;
+
+    my $params = {
+        code  => $code,
+        table => $table,
+        scope => $scope,
+        json  => Mojo::JSON->true,
+    };
+
+    foreach(qw/index_position key_type encode_type upper_bound lower_bound/) {
+        $params->{$_} = $filter->{$_} // '';
+    }
+
+    $self->provider->post_request('/v1/chain/get_table_rows', $params, add_msg_cb 'get_account' => $cb);
+}
+
 sub get_currency_balance {
     my ($self, $account, $c_name, $sym, $cb) = @_;
     my $data = {
