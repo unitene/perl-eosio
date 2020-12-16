@@ -67,7 +67,7 @@ sub push_actions {
         return $cb->(undef, $error_msg) unless $result;
 
         $self->wallet->unlock($wallet->{name}, $wallet->{password}, cb $cb, sub {
-            my $exp_time = DateTime->now()->add({ seconds => $options->{expiration_seconds} // 1 })
+            my $exp_time = DateTime->now()->add({ seconds => $options->{expiration_seconds} // 60 })
                 ->strftime("%FT%T.000");
             $self->_get_block_info(cb $cb, sub {
                 my $result = shift;
