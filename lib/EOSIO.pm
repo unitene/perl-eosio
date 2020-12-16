@@ -37,7 +37,8 @@ sub _build_wallet {
 }
 
 sub push_actions {
-    my ($self, $actions, $wallet, $keys, $cb) = @_;
+    my ($self, $actions, $wallet, $keys, $cb, $options) = (shift, shift, shift, shift, pop, shift);
+    $options //= {};
     return $cb->([], 'OK') unless @$actions;
 
     my $cv = AnyEvent->condvar;
@@ -66,7 +67,8 @@ sub push_actions {
         return $cb->(undef, $error_msg) unless $result;
 
         $self->wallet->unlock($wallet->{name}, $wallet->{password}, cb $cb, sub {
-            my $exp_time = DateTime->now()->add({ minutes => 30 })->strftime("%FT%T.000");
+            my $exp_time = DateTime->now()->add({ seconds => $options->{expiration_seconds} // 1 })
+                ->strftime("%FT%T.000");
             $self->_get_block_info(cb $cb, sub {
                 my $result = shift;
                 my $chain_id = $result->{chain_id};
